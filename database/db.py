@@ -1,11 +1,11 @@
-from database.config import ELEPHANT_URL
+from database.config import DatabaseConfig
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 
-
-engine = create_engine(ELEPHANT_URL)
+db_data = DatabaseConfig()
+engine = create_engine(db_data.elehpant_url)
 db_session = scoped_session(sessionmaker(bind=engine))
 
 Base = declarative_base()

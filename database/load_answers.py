@@ -1,14 +1,27 @@
 import csv
+import random
+from database.models import User, Question
 from database.models import Answers
 from database.db import db_session
 from sqlalchemy.exc import SQLAlchemyError
-from database.load_questions import save_questions_data
 
-def create_answer(row):
+
+def fake_answers_list():
+    answers_list = []
+    users = User.query.all()
+    questions = Question.query.all()
+    for user in users:
+        for question in questions:
+            answer = [user.id, question.id, random.choice([0, 1])]
+            answers_list.append(answer)
+    return answers_list
+
+
+def create_answer(string_for_db):
     answer = Answers(
-        user_id = row['user_id'],
-        question_id = row['question_id'],
-        answer = row['answer']
+        user_id = string_for_db['user_id'],
+        question_id = string_for_db['question_id'],
+        answer = string_for_db['answer']
     )
     db_session.add(answer)
     try:
@@ -17,16 +30,18 @@ def create_answer(row):
         db_session.rollback()
         raise
 
+
 def prepare_data(row):
-    row['user_id'] = int(row['user_id'])
-    row['question_id'] = int(row['question_id'])
-    row['answer'] = str(row['answer'])
-    return row
+    string_for_db = {}
+    string_for_db['user_id']  = int(row[0])
+    string_for_db['question_id'] = int(row[1])
+    string_for_db['answer'] = int(row[2])
+    return string_for_db
 
 
 def process_row(row):
-    row = prepare_data(row)
-    create_answer(row)
+    string_for_db = prepare_data(row)
+    create_answer(string_for_db)
 
 
 def print_error(row_num, error_text, exception):
@@ -35,14 +50,12 @@ def print_error(row_num, error_text, exception):
     print('-' * 100)
 
 
-def read_answers_csv(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
-        fields = ['user_id', 'question_id', 'answer']
-        reader = csv.DictReader(f, fields, delimiter=';')
-        for row_num, row in enumerate(reader, start=1):
-            try:
-                process_row(row)
-            except (TypeError, ValueError) as e:
-                print_error(row_num, "Неправильный формат данных {}", e)
-            except SQLAlchemyError as e:
-                print_error(row_num, "Ошибка целостности данных {}", e)
+def add_fake_answers_to_db(data_list):
+    for row_num, row in enumerate(data_list):
+        try:
+            process_row(row)
+        except (TypeError, ValueError) as e:
+            print_error(row_num, "Неправильный формат данных {}", e)
+        except SQLAlchemyError as e:
+           print_error(row_num, "Ошибка целостности данных {}", e)
+

@@ -1,2 +1,6 @@
-gender_male = "male"
-gender_female = "female"
+import enum
+
+
+class Gender(enum.Enum):
+    MALE   = "male"
+    FEMALE = "female"

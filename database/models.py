@@ -1,13 +1,15 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from database.db import Base, engine
 from sqlalchemy.orm import relationship
+from constants import Gender
+from sqlalchemy import Enum
 
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     fname = Column(String)
     lname = Column(String)
-    gender = Column(String(6))
+    gender = Column(Enum(Gender))
     answers = relationship("Answers", back_populates="user")
 
     def __repr__(self):
