@@ -10,10 +10,20 @@ def save_questions_data(questions_list):
 
 def read_csv(filename):
     with open(filename, 'r', encoding='utf-8') as f:
-        fields = ['question', 'num_of_question_male', 'num_of_question_female']
+        fields = ['question', 
+                  'num_of_question_male', 
+                  'scale_d_n_yes_male',
+                  'scale_d_n_no_male',
+                  'scale_mdp_yes_male',
+                  'scale_mdp_no_male', 
+                  'num_of_question_female',
+                    'scale_d_n_yes_female',
+                    'scale_d_n_no_female', 
+                    'scale_mdp_yes_female',
+                    'scale_mdp_no_female'
+                    ]
         reader = csv.DictReader(f, fields, delimiter=';')
         questions_list = []
         for row in reader:
             questions_list.append(row)
         save_questions_data(questions_list)
-

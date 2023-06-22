@@ -23,6 +23,14 @@ class Question(Base):
     question = Column(String)
     num_of_question_male = Column(Integer)
     num_of_question_female = Column(Integer)
+    scale_d_n_yes_male = Column(Integer)
+    scale_d_n_no_male = Column(Integer)
+    scale_mdp_yes_male = Column(Integer)
+    scale_mdp_no_male = Column(Integer)
+    scale_d_n_yes_female = Column(Integer)
+    scale_d_n_no_female = Column(Integer)
+    scale_mdp_yes_female = Column(Integer)
+    scale_mdp_no_female = Column(Integer)
     answers = relationship("Answers", back_populates="question")
 
     def __repr__(self):
