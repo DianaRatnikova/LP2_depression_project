@@ -9,7 +9,11 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     fname = Column(String)
     lname = Column(String)
+# Вопрос: когда запускаю mypy, на эту строку выдаётся замечание:
+# database\models.py:12: error: Need type annotation for "gender"  [var-annotated]
+# mypy перестаёт ругаться, когда gender = Column(Enum), но тогда не cоздаётся бд
     gender = Column(Enum(Gender))
+ 
     answers = relationship("Answers", back_populates="user")
 
     def __repr__(self):

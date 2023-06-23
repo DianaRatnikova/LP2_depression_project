@@ -6,7 +6,7 @@ from database.db import db_session
 from sqlalchemy.exc import SQLAlchemyError
 
 
-def fake_answers_list():
+def fake_answers_list() -> list[list]:
     answers_list = []
     users = User.query.all()
     questions = Question.query.all()
@@ -17,7 +17,7 @@ def fake_answers_list():
     return answers_list
 
 
-def create_answer(string_for_db):
+def create_answer(string_for_db:  dict) -> None:
     answer = Answers(
         user_id = string_for_db['user_id'],
         question_id = string_for_db['question_id'],
@@ -31,7 +31,7 @@ def create_answer(string_for_db):
         raise
 
 
-def prepare_data(row):
+def prepare_data(row: list) -> dict:
     string_for_db = {}
     string_for_db['user_id']  = int(row[0])
     string_for_db['question_id'] = int(row[1])
@@ -39,18 +39,19 @@ def prepare_data(row):
     return string_for_db
 
 
-def process_row(row):
+def process_row(row: list) -> None:
     string_for_db = prepare_data(row)
     create_answer(string_for_db)
 
 
-def print_error(row_num, error_text, exception):
+def print_error(row_num: int, error_text: str, exception: TypeError | ValueError| SQLAlchemyError) -> None:
     print(f"Ошибка на строке {row_num}")
     print(error_text.format(exception))
     print('-' * 100)
 
 
-def add_fake_answers_to_db(data_list):
+def add_fake_answers_to_db(data_list: list[list]) -> None:
+    print(f"{type(data_list) = }")
     for row_num, row in enumerate(data_list):
         try:
             process_row(row)

@@ -2,7 +2,7 @@
 from database.db import Base, engine
 from database.add_user import add_user
 from database.load_questions import read_csv
-from database.load_answers import fake_answers_list, add_fake_answers_to_db
+from database.genarate_fake_answers import fake_answers_list, add_fake_answers_to_db
 import time
 
 if __name__ == "__main__":
