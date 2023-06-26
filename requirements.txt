@@ -1,4 +1,6 @@
 greenlet==2.0.2
+mypy==1.4.0
+mypy-extensions==1.0.0
 psycopg2-binary==2.9.6
 SQLAlchemy==2.0.16
 typing_extensions==4.6.3

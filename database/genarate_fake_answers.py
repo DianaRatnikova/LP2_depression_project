@@ -1,12 +1,11 @@
 import csv
 import random
-from database.models import User, Question
-from database.models import Answers
+from database.models import User, Question, Answers
 from database.db import db_session
 from sqlalchemy.exc import SQLAlchemyError
 
 
-def fake_answers_list() -> list[list]:
+def fake_answers_list() -> list[list[str]]:
     answers_list = []
     users = User.query.all()
     questions = Question.query.all()
@@ -24,18 +23,15 @@ def create_answer(string_for_db:  dict) -> None:
         answer = string_for_db['answer']
     )
     db_session.add(answer)
-    try:
-        db_session.commit()
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise
+    db_session.commit()
 
 
-def prepare_data(row: list) -> dict:
-    string_for_db = {}
-    string_for_db['user_id']  = int(row[0])
-    string_for_db['question_id'] = int(row[1])
-    string_for_db['answer'] = int(row[2])
+def prepare_data(row: list[str]) -> dict:
+    string_for_db = {
+        'user_id': int(row[0]),
+        'question_id': int(row[1]),
+        'answer': int(row[2])
+        }
     return string_for_db
 
 
@@ -50,8 +46,7 @@ def print_error(row_num: int, error_text: str, exception: TypeError | ValueError
     print('-' * 100)
 
 
-def add_fake_answers_to_db(data_list: list[list]) -> None:
-    print(f"{type(data_list) = }")
+def add_fake_answers_to_db(data_list: list[list[str]]) -> None:
     for row_num, row in enumerate(data_list):
         try:
             process_row(row)
