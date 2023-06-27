@@ -1,13 +1,19 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from database.db import Base, engine
 from sqlalchemy.orm import relationship
+from constants import Gender
+from sqlalchemy import Enum
 
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     fname = Column(String)
     lname = Column(String)
-    gender = Column(String(6))
+# в таком виде mype перестаёт ругаться, но теперь у меня вопрос, 
+# почему аннотация была нужна только полю gender, а все остальные 
+# прошли нормально и без аннотации. Это так enum что ли влияет?
+    gender: Column = Column(Enum(Gender))
+ 
     answers = relationship("Answers", back_populates="user")
 
     def __repr__(self):
@@ -21,6 +27,14 @@ class Question(Base):
     question = Column(String)
     num_of_question_male = Column(Integer)
     num_of_question_female = Column(Integer)
+    scale_d_n_yes_male = Column(Integer)
+    scale_d_n_no_male = Column(Integer)
+    scale_mdp_yes_male = Column(Integer)
+    scale_mdp_no_male = Column(Integer)
+    scale_d_n_yes_female = Column(Integer)
+    scale_d_n_no_female = Column(Integer)
+    scale_mdp_yes_female = Column(Integer)
+    scale_mdp_no_female = Column(Integer)
     answers = relationship("Answers", back_populates="question")
 
     def __repr__(self):

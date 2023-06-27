@@ -5,7 +5,7 @@ __pycache__/
 config.py
 # C extensions
 *.so
-*.csv
+#*.csv
 # Distribution / packaging
 .Python
 build/
