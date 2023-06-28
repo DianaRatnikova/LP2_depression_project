@@ -3,16 +3,9 @@ from database.db import db_session
 from sqlalchemy import desc
 import sqlalchemy
 from constants import Gender
-
-
-#def fname_query(fname: str)  -> sqlalchemy.orm.query.Query | None:
-#    users_with_right_fname = User.query.filter(User.fname == fname)
-#    return users_with_right_fname
-#
-#
-#def lname_query(fname_query: sqlalchemy.orm.query.Query, lname: str)  -> sqlalchemy.orm.query.Query | None:
-#    users_with_right_lname = fname_query.filter(fname_query.lname == lname)
-#    return users_with_right_lname
+from typing import  Any
+from sqlalchemy.orm import load_only
+from sqlalchemy.orm import Load
 
 
 def select_user_via_name(fname: str, lname: str)  -> sqlalchemy.orm.query.Query | None:
@@ -24,56 +17,24 @@ def select_user_via_id(user_id: int)  -> sqlalchemy.orm.query.Query | None:
     return user_to_find
 
 
-def get_user_id(fname: str, lname: str)  -> int | None:
-    user_to_find = select_user_via_name(fname, lname)
-    if user_to_find:
-# mypy ругается(        queries.py:30: error: "Query[Any]" has no attribute "id"  [attr-defined]
-        user_id = user_to_find.id
-        return user_id
-    else:
-        print(f"Пользователь {fname} {lname} не найден в БД")
-        return None
+def get_user_id(user_to_find: sqlalchemy.orm.query.Query)  -> int:
+    user_id = user_to_find.id  # type: ignore
+    return user_id
 
 
 def get_user_gender(user_id: int) -> Gender | None:
     user_to_find = select_user_via_id(user_id)
     if user_to_find:
-        return user_to_find.gender
+        return user_to_find.gender  # type: ignore
     else:
         print(f"Пользователь с id {user_id} не найден в БД")
         return None
 
 
-def get_user_answers_from_database(user_id: int, user_gender: Gender) -> sqlalchemy.orm.query.Query:
-    if (user_gender ==  Gender.FEMALE):
-        user_answers = db_session.query(Answers, Question).filter(
-                Question.id == Answers.question_id, 
-                Question.num_of_question_female != 0
-                ).order_by(Question.num_of_question_female)
-    else:
-        user_answers = db_session.query(Answers, Question).filter(
-                Question.id == Answers.question_id, 
-                Question.num_of_question_male != 0
-                ).order_by(Question.num_of_question_male)
-    return user_answers
-
-
-def count_d_n_marks(user_answers: sqlalchemy.orm.query.Query, user_gender: Gender) -> int:
-    d_n_marks = 0
-    for answer, question in user_answers:
-        if (user_gender ==  Gender.FEMALE):
-            point_to_add = question.scale_d_n_yes_female if answer.answer == 1 else question.scale_d_n_no_female
-            d_n_marks += point_to_add
-        else:
-            point_to_add = question.scale_d_n_yes_male if answer.answer == 1 else question.scale_d_n_no_male
-            d_n_marks += point_to_add
-    return d_n_marks
-
-
-def count_mdp_marks(user_answers: sqlalchemy.orm.query.Query, user_gender: Gender) -> int:
+def count_mdp_marks1(user_answers: sqlalchemy.orm.query.Query, user_gender: Gender) -> int:
     mdp_marks = 0
     for answer, question in user_answers:
-        if (user_gender ==  Gender.FEMALE):
+        if user_gender ==  Gender.FEMALE:
             point_to_add = question.scale_mdp_yes_female if answer.answer == 1 else question.scale_mdp_no_female
             mdp_marks += point_to_add
         else:
@@ -82,19 +43,45 @@ def count_mdp_marks(user_answers: sqlalchemy.orm.query.Query, user_gender: Gende
     return mdp_marks
 
 
-if __name__ == '__main__':
-    user_id = get_user_id('Diana', "Ratnikova")
+def get_user_answers_from_database(user_id, num_of_question) -> sqlalchemy.orm.query.Query:
+    user_answers = db_session.query(Answers, Question).filter(
+                Question.id == Answers.question_id,
+                Answers.user_id == user_id,
+                num_of_question != 0
+                ).order_by(num_of_question)
+    return user_answers
 
-# Несколько вопросов:
-# 1. Всё равно где-то будет ветвление в зависимости от гендера, просто сейчас перенесла его в функции. Это норм?
-# 2. Как было бы корректнее назвать функции, подсчитывающие оценки D-N и MDP? Я сама хз, что значал эти сокращения,
-# поэтому выбрала названия функций count_d_n_marks, count_mdp_marks
+
+if __name__ == '__main__':
+    fname = 'Diana'
+    lname = "Ratnikova"
+    user_to_find = select_user_via_name(fname, lname)
+    if user_to_find:
+        user_id = get_user_id(user_to_find)
+    else:
+        print(f"Пользователь {fname} {lname} не найден в БД")
+
+# Как могла избавилась от ветвления, но до сих пор уверенности нет
+# С моей организацией БД не вижу варианта, когда по одной проверке гендера сразу бы назначались все гендерные переменные,
+# тк в строке 73 сначала идёт обращение к Question, а все назначения переменных шкал возможны только после получения
+# запроса user_answers. Блин, начинаю путаться и уже хз, как при данном раскладе перенести подсчёты d_n в функцию
 
     if user_id:
         user_gender = get_user_gender(user_id)
         if user_gender:
-            user_answers = get_user_answers_from_database(user_id, user_gender)
-            d_n_marks  =  count_d_n_marks(user_answers, user_gender)
-            mdp_marks = count_mdp_marks(user_answers, user_gender)
+            num_of_question = Question.num_of_question_female if user_gender == Gender.FEMALE else Question.num_of_question_male
+            user_answers = get_user_answers_from_database(user_id, num_of_question)
+
+            d_n_marks = 0
+            mdp_marks = 0
+
+            for answer, question in user_answers:
+                    scale_d_n_yes = question.scale_d_n_yes_female if user_gender == Gender.FEMALE else question.scale_d_n_yes_male
+                    scale_d_n_no =  question.scale_d_n_no_female if user_gender == Gender.FEMALE else question.scale_d_n_no_male
+                    d_n_marks += scale_d_n_yes if answer.answer == 1 else scale_d_n_no
+
+                    scale_mdp_yes = question.scale_mdp_yes_female if user_gender == Gender.FEMALE else question.scale_mdp_yes_male
+                    scale_mdp_no =  question.scale_mdp_no_female if user_gender == Gender.FEMALE else question.scale_mdp_no_male
+                    mdp_marks += scale_mdp_yes if answer.answer == 1 else scale_mdp_no
 
             print(f"{d_n_marks = }, {mdp_marks = }")
